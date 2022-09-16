@@ -83,3 +83,20 @@ endif ()
 
 SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES PREFIX "")
 setup_target_wall(${PROJECT_NAME})
+
+###############################################################################
+# Dependency
+###############################################################################
+
+function(setup_freetype name)
+    target_sources(${name} PRIVATE
+        ${IMGUI_ROOT}/misc/freetype/imgui_freetype.cpp)
+    target_compile_options(${name} PRIVATE -DIMGUI_ENABLE_FREETYPE)
+
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/freetype-2.12.1)
+    set_property(TARGET freetype PROPERTY POSITION_INDEPENDENT_CODE ON)
+    target_link_libraries(${name} PRIVATE freetype)
+endfunction()
+
+# freetype
+setup_freetype(imgui)
