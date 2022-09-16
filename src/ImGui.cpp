@@ -124,12 +124,15 @@ static int _imgui_gc(lua_State *L)
 
 static int _imgui_begin(lua_State *L)
 {
-    const char* str = luaL_checkstring(L, 2);
+    bool ret;
+    const char* str = luaL_checkstring(L, 1);
 
-    bool ret = ImGui::Begin(str);
+    bool open = true;
+    ret = ImGui::Begin(str, &open);
     lua_pushboolean(L, ret);
+    lua_pushboolean(L, open);
 
-    return 1;
+    return 2;
 }
 
 static int _imgui_end(lua_State *L)
@@ -141,8 +144,8 @@ static int _imgui_end(lua_State *L)
 
 static int _imgui_checkbox(lua_State *L)
 {
-    const char* str = luaL_checkstring(L, 2);
-    bool is_checked = lua_toboolean(L, 3);
+    const char* str = luaL_checkstring(L, 1);
+    bool is_checked = lua_toboolean(L, 2);
 
     ImGui::Checkbox(str, &is_checked);
 
@@ -152,7 +155,7 @@ static int _imgui_checkbox(lua_State *L)
 
 static int _imgui_button(lua_State *L)
 {
-    const char* str = luaL_checkstring(L, 2);
+    const char* str = luaL_checkstring(L, 1);
 
     bool ret = ImGui::Button(str);
 
@@ -162,7 +165,7 @@ static int _imgui_button(lua_State *L)
 
 static int _imgui_text(lua_State *L)
 {
-    const char* str = luaL_checkstring(L, 2);
+    const char* str = luaL_checkstring(L, 1);
     ImGui::Text("%s", str);
     return 0;
 }
@@ -176,14 +179,14 @@ static int _imgui_same_line(lua_State *L)
 
 static int _imgui_bullet_text(lua_State *L)
 {
-    const char* str = luaL_checkstring(L, 2);
+    const char* str = luaL_checkstring(L, 1);
     ImGui::BulletText("%s", str);
     return 0;
 }
 
 static int _imgui_input_text(lua_State *L)
 {
-    const char* str = luaL_checkstring(L, 2);
+    const char* str = luaL_checkstring(L, 1);
 
     std::string data;
     ImGui::InputText(str, &data);
@@ -213,7 +216,7 @@ static int _imgui_end_menu_bar(lua_State *L)
 
 static int _imgui_begin_menu(lua_State *L)
 {
-    const char* str = luaL_checkstring(L, 2);
+    const char* str = luaL_checkstring(L, 1);
     bool ret = ImGui::BeginMenu(str);
     lua_pushboolean(L, ret);
     return 1;
@@ -228,8 +231,8 @@ static int _imgui_end_menu(lua_State *L)
 
 static int _imgui_menu_item(lua_State *L)
 {
-    const char* label = luaL_checkstring(L, 2);
-    const char* short_cut = lua_tostring(L, 3);
+    const char* label = luaL_checkstring(L, 1);
+    const char* short_cut = lua_tostring(L, 2);
 
     bool ret = ImGui::MenuItem(label, short_cut);
     lua_pushboolean(L, ret);
@@ -238,11 +241,11 @@ static int _imgui_menu_item(lua_State *L)
 
 static int _imgui_text_colored(lua_State *L)
 {
-    float c1 = lua_tonumber(L, 2);
-    float c2 = lua_tonumber(L, 3);
-    float c3 = lua_tonumber(L, 4);
-    float c4 = lua_tonumber(L, 5);
-    const char* text = luaL_checkstring(L, 6);
+    float c1 = luaL_checknumber(L, 1);
+    float c2 = luaL_checknumber(L, 2);
+    float c3 = luaL_checknumber(L, 3);
+    float c4 = luaL_checknumber(L, 4);
+    const char* text = luaL_checkstring(L, 5);
 
     ImGui::TextColored(ImVec4(c1, c2, c3, c4), "%s", text);
     return 0;
@@ -250,7 +253,7 @@ static int _imgui_text_colored(lua_State *L)
 
 static int _imgui_begin_child(lua_State *L)
 {
-    const char* text = lua_tostring(L, 2);
+    const char* text = luaL_checkstring(L, 1);
     ImGui::BeginChild(text);
     return 0;
 }
@@ -264,10 +267,10 @@ static int _imgui_end_child(lua_State *L)
 
 static int _imgui_slider_float(lua_State *L)
 {
-    const char* label = lua_tostring(L, 2);
-    float f = lua_tonumber(L, 3);
-    float min = lua_tonumber(L, 4);
-    float max = lua_tonumber(L, 5);
+    const char* label = luaL_checkstring(L, 1);
+    float f = luaL_checknumber(L, 2);
+    float min = luaL_checknumber(L, 3);
+    float max = luaL_checknumber(L, 4);
 
     ImGui::SliderFloat(label, &f, min, max);
 
