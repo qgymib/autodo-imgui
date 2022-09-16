@@ -64,9 +64,6 @@ static int _on_gui_loop_beg(lua_State* L, int status, lua_KContext ctx)
         return 0;
     }
 
-    int sp = lua_gettop(L);
-    assert(sp >= 2);
-
     lua_pushvalue(L, 2);
     lua_pushvalue(L, 1);
 
