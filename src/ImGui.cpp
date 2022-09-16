@@ -294,20 +294,37 @@ static int _imgui_slider_float(lua_State *L)
 
 static int _imgui_plot_lines(lua_State *L)
 {
-    int sp = lua_gettop(L);
     const char* label = luaL_checkstring(L, 1);
 
-    size_t val_num = sp - 1;
-    float* val_array = (float*)malloc(sizeof(float) * val_num);
-
-    for (size_t i = 0; i < val_num; i++)
+    if (lua_isnumber(L, 2))
     {
-        val_array[i] = lua_tonumber(L, i + 2);
+        int sp = lua_gettop(L);
+        size_t val_num = sp - 1;
+        float* val_array = (float*)malloc(sizeof(float) * val_num);
+
+        for (size_t i = 0; i < val_num; i++)
+        {
+            val_array[i] = lua_tonumber(L, i + 2);
+        }
+
+        ImGui::PlotLines(label, val_array, val_num);
+        free(val_array);
     }
+    else if (lua_istable(L, 2))
+    {
+        size_t val_num = (size_t)luaL_len(L, 2);
+        float* val_array = (float*)malloc(sizeof(float) * val_num);
 
-    ImGui::PlotLines(label, val_array, val_num);
+        lua_pushnil(L);
+        for (size_t i = 0; lua_next(L, 2) != 0; i++)
+        {
+            val_array[i] = lua_tonumber(L, -1);
+            lua_pop(L, 1);
+        }
 
-    free(val_array);
+        ImGui::PlotLines(label, val_array, val_num);
+        free(val_array);
+    }
 
     return 0;
 }
