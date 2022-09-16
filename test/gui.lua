@@ -35,6 +35,9 @@ local function on_gui(gui)
         show_demo = gui.ShowDemoWindow()
     end
 
+    gui.ShowMetricsWindow()
+    gui.ShowStackToolWindow()
+
     gui.End()
 end
 

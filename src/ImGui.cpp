@@ -175,8 +175,19 @@ static int _imgui_text(lua_State *L)
 
 static int _imgui_same_line(lua_State *L)
 {
-    (void)L;
-    ImGui::SameLine();
+    float offset_from_start_x=0.0f;
+    float spacing=-1.0f;
+
+    if (lua_isnumber(L, 1))
+    {
+        offset_from_start_x = lua_tonumber(L, 1);
+    }
+    if (lua_isnumber(L, 2))
+    {
+        spacing = lua_tonumber(L, 2);
+    }
+
+    ImGui::SameLine(offset_from_start_x, spacing);
     return 0;
 }
 
@@ -309,6 +320,175 @@ static int _imgui_show_demo_window(lua_State *L)
     return 1;
 }
 
+static int _imgui_show_metrics_window(lua_State *L)
+{
+    bool show = true;
+    ImGui::ShowMetricsWindow(&show);
+    lua_pushboolean(L, show);
+    return 1;
+}
+
+static int _imgui_show_stack_tool_window(lua_State *L)
+{
+    bool show = true;
+    ImGui::ShowStackToolWindow(&show);
+    lua_pushboolean(L, show);
+    return 1;
+}
+
+static int _imgui_get_window_pos(lua_State *L)
+{
+    ImVec2 ret = ImGui::GetWindowPos();
+    lua_pushnumber(L, ret.x);
+    lua_pushnumber(L, ret.y);
+    return 2;
+}
+
+static int _imgui_get_window_size(lua_State *L)
+{
+    ImVec2 ret = ImGui::GetWindowSize();
+    lua_pushnumber(L, ret.x);
+    lua_pushnumber(L, ret.y);
+    return 2;
+}
+
+static int _imgui_set_next_window_pos(lua_State *L)
+{
+    float c1 = lua_tonumber(L, 1);
+    float c2 = lua_tonumber(L, 2);
+    ImVec2 pos(c1, c2);
+    ImGui::SetNextWindowPos(pos);
+    return 0;
+}
+
+static int _imgui_set_next_window_size(lua_State *L)
+{
+    float c1 = lua_tonumber(L, 1);
+    float c2 = lua_tonumber(L, 2);
+    ImVec2 size(c1, c2);
+    ImGui::SetNextWindowSize(size);
+    return 0;
+}
+
+static int _imgui_set_next_window_focus(lua_State *L)
+{
+    (void)L;
+    ImGui::SetNextWindowFocus();
+    return 0;
+}
+
+static int _imgui_separator(lua_State *L)
+{
+    (void)L;
+    ImGui::Separator();
+    return 0;
+}
+
+static int _imgui_new_line(lua_State *L)
+{
+    (void)L;
+    ImGui::NewLine();
+    return 0;
+}
+
+static int _imgui_spacing(lua_State *L)
+{
+    (void)L;
+    ImGui::Spacing();
+    return 0;
+}
+
+static int _imgui_dummy(lua_State *L)
+{
+    float c1 = lua_tonumber(L, 1);
+    float c2 = lua_tonumber(L, 2);
+    ImVec2 size(c1, c2);
+    ImGui::Dummy(size);
+    return 0;
+}
+
+static int _imgui_indent(lua_State *L)
+{
+    float indent_w = 0.0f;
+    if (lua_isnumber(L, 1))
+    {
+        indent_w = lua_tonumber(L, 1);
+    }
+    ImGui::Indent(indent_w);
+    return 0;
+}
+
+static int _imgui_unindent(lua_State *L)
+{
+    float indent_w = 0.0f;
+    if (lua_isnumber(L, 1))
+    {
+        indent_w = lua_tonumber(L, 1);
+    }
+    ImGui::Unindent(indent_w);
+    return 0;
+}
+
+static int _imgui_begin_group(lua_State *L)
+{
+    (void)L;
+    ImGui::BeginGroup();
+    return 0;
+}
+
+static int _imgui_end_group(lua_State *L)
+{
+    (void)L;
+    ImGui::EndGroup();
+    return 0;
+}
+
+static int _imgui_get_cursor_pos(lua_State *L)
+{
+    ImVec2 ret = ImGui::GetCursorPos();
+    lua_pushnumber(L, ret.x);
+    lua_pushnumber(L, ret.y);
+    return 2;
+}
+
+static int _imgui_set_cursor_pos(lua_State *L)
+{
+    float c1 = lua_tonumber(L, 1);
+    float c2 = lua_tonumber(L, 2);
+    ImVec2 pos(c1, c2);
+    ImGui::SetCursorPos(pos);
+    return 0;
+}
+
+static int _imgui_get_cursor_screen_pos(lua_State *L)
+{
+    ImVec2 ret = ImGui::GetCursorScreenPos();
+    lua_pushnumber(L, ret.x);
+    lua_pushnumber(L, ret.y);
+    return 2;
+}
+
+static int _imgui_align_text_to_frame_padding(lua_State *L)
+{
+    (void)L;
+    ImGui::AlignTextToFramePadding();
+    return 0;
+}
+
+static int _imgui_get_text_line_height(lua_State *L)
+{
+    float ret = ImGui::GetTextLineHeight();
+    lua_pushnumber(L, ret);
+    return 1;
+}
+
+static int _imgui_get_frame_height(lua_State *L)
+{
+    float ret = ImGui::GetFrameHeight();
+    lua_pushnumber(L, ret);
+    return 1;
+}
+
 static int _imgui_loop(lua_State *L)
 {
     /* auto.coroutine */
@@ -333,26 +513,47 @@ static int _imgui_loop(lua_State *L)
         { NULL,         NULL },
     };
     static const luaL_Reg s_gui_method[] = {
-        { "Begin",          _imgui_begin },
-        { "BeginChild",     _imgui_begin_child },
-        { "BeginMenu",      _imgui_begin_menu },
-        { "BeginMenuBar",   _imgui_begin_menu_bar },
-        { "BulletText",     _imgui_bullet_text },
-        { "Button",         _imgui_button },
-        { "CheckBox",       _imgui_checkbox },
-        { "End",            _imgui_end },
-        { "EndChild",       _imgui_end_child },
-        { "EndMenu",        _imgui_end_menu },
-        { "EndMenuBar",     _imgui_end_menu_bar },
-        { "InputText",      _imgui_input_text },
-        { "MenuItem",       _imgui_menu_item },
-        { "PlotLines",      _imgui_plot_lines },
-        { "SameLine",       _imgui_same_line },
-        { "ShowDemoWindow", _imgui_show_demo_window },
-        { "SliderFloat",    _imgui_slider_float },
-        { "Text",           _imgui_text },
-        { "TextColored",    _imgui_text_colored },
-        { NULL,             NULL },
+        { "AlignTextToFramePadding",    _imgui_align_text_to_frame_padding },
+        { "Begin",                      _imgui_begin },
+        { "BeginChild",                 _imgui_begin_child },
+        { "BeginGroup",                 _imgui_begin_group },
+        { "BeginMenu",                  _imgui_begin_menu },
+        { "BeginMenuBar",               _imgui_begin_menu_bar },
+        { "BulletText",                 _imgui_bullet_text },
+        { "Button",                     _imgui_button },
+        { "CheckBox",                   _imgui_checkbox },
+        { "Dummy",                      _imgui_dummy },
+        { "End",                        _imgui_end },
+        { "EndChild",                   _imgui_end_child },
+        { "EndGroup",                   _imgui_end_group },
+        { "EndMenu",                    _imgui_end_menu },
+        { "EndMenuBar",                 _imgui_end_menu_bar },
+        { "GetCursorPos",               _imgui_get_cursor_pos },
+        { "GetCursorScreenPos",         _imgui_get_cursor_screen_pos },
+        { "GetFrameHeight",             _imgui_get_frame_height },
+        { "GetTextLineHeight",          _imgui_get_text_line_height },
+        { "GetWindowPos",               _imgui_get_window_pos },
+        { "GetWindowSize",              _imgui_get_window_size },
+        { "Indent",                     _imgui_indent },
+        { "InputText",                  _imgui_input_text },
+        { "NewLine",                    _imgui_new_line },
+        { "MenuItem",                   _imgui_menu_item },
+        { "PlotLines",                  _imgui_plot_lines },
+        { "SameLine",                   _imgui_same_line },
+        { "Separator",                  _imgui_separator },
+        { "SetCursorPos",               _imgui_set_cursor_pos },
+        { "SetNextWindowFocus",         _imgui_set_next_window_focus },
+        { "SetNextWindowPos",           _imgui_set_next_window_pos },
+        { "SetNextWindowSize",          _imgui_set_next_window_size },
+        { "ShowDemoWindow",             _imgui_show_demo_window },
+        { "ShowMetricsWindow",          _imgui_show_metrics_window },
+        { "ShowStackToolWindow",        _imgui_show_stack_tool_window },
+        { "SliderFloat",                _imgui_slider_float },
+        { "Spacing",                    _imgui_spacing },
+        { "Text",                       _imgui_text },
+        { "TextColored",                _imgui_text_colored },
+        { "Unindent",                   _imgui_unindent },
+        { NULL,                         NULL },
     };
     if (luaL_newmetatable(L, "__atd_imgui") != 0)
     {
