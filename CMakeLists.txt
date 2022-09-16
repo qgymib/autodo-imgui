@@ -56,6 +56,7 @@ endfunction()
 add_library(${PROJECT_NAME} SHARED
     src/ImGui.cpp
     src/ImGuiAdapter.cpp
+    ${IMGUI_ROOT}/imgui_demo.cpp
     ${IMGUI_ROOT}/imgui_draw.cpp
     ${IMGUI_ROOT}/imgui_tables.cpp
     ${IMGUI_ROOT}/imgui_widgets.cpp

@@ -304,6 +304,14 @@ static int _imgui_plot_lines(lua_State *L)
     return 0;
 }
 
+static int _imgui_show_demo_window(lua_State *L)
+{
+    bool show = true;
+    ImGui::ShowDemoWindow(&show);
+    lua_pushboolean(L, show);
+    return 1;
+}
+
 static int _imgui_loop(lua_State *L)
 {
     /* auto.coroutine */
@@ -343,6 +351,7 @@ static int _imgui_loop(lua_State *L)
         { "MenuItem",       _imgui_menu_item },
         { "PlotLines",      _imgui_plot_lines },
         { "SameLine",       _imgui_same_line },
+        { "ShowDemoWindow", _imgui_show_demo_window },
         { "SliderFloat",    _imgui_slider_float },
         { "Text",           _imgui_text },
         { "TextColored",    _imgui_text_colored },

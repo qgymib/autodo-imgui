@@ -3,6 +3,7 @@ local imgui = require("imgui")
 local is_checked = false
 local is_closed = false
 local need_show = true
+local show_demo = true
 
 local function on_gui(gui)
     if not need_show then
@@ -29,6 +30,10 @@ local function on_gui(gui)
     end
 
     gui.PlotLines("fps", 1, 5, 12, 9, 2, 4, 0)
+
+    if show_demo then
+        show_demo = gui.ShowDemoWindow()
+    end
 
     gui.End()
 end
