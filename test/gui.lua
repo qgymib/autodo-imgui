@@ -9,7 +9,7 @@ local function on_gui(gui)
         return
     end
 
-    is_open, need_show = gui.Begin("Test window")
+    is_open, need_show = gui.Begin("Test window", need_show)
 
     if not is_open then
         gui.End()
@@ -27,6 +27,8 @@ local function on_gui(gui)
     if str ~= nil then
         io.write(str .. "\n")
     end
+
+    gui.PlotLines("fps", 1, 5, 12, 9, 2, 4, 0)
 
     gui.End()
 end

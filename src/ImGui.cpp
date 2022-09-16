@@ -127,12 +127,18 @@ static int _imgui_begin(lua_State *L)
     bool ret;
     const char* str = luaL_checkstring(L, 1);
 
-    bool open = true;
-    ret = ImGui::Begin(str, &open);
-    lua_pushboolean(L, ret);
-    lua_pushboolean(L, open);
+    if (lua_isboolean(L, 2))
+    {
+        bool open = lua_toboolean(L, 2);
+        ret = ImGui::Begin(str, &open);
+        lua_pushboolean(L, ret);
+        lua_pushboolean(L, open);
+        return 2;
+    }
 
-    return 2;
+    ret = ImGui::Begin(str);
+    lua_pushboolean(L, ret);
+    return 1;
 }
 
 static int _imgui_end(lua_State *L)
@@ -278,6 +284,26 @@ static int _imgui_slider_float(lua_State *L)
     return 1;
 }
 
+static int _imgui_plot_lines(lua_State *L)
+{
+    int sp = lua_gettop(L);
+    const char* label = luaL_checkstring(L, 1);
+
+    size_t val_num = sp - 1;
+    float* val_array = (float*)malloc(sizeof(float) * val_num);
+
+    for (size_t i = 0; i < val_num; i++)
+    {
+        val_array[i] = lua_tonumber(L, i + 2);
+    }
+
+    ImGui::PlotLines(label, val_array, val_num);
+
+    free(val_array);
+
+    return 0;
+}
+
 static int _imgui_loop(lua_State *L)
 {
     /* auto.coroutine */
@@ -315,6 +341,7 @@ static int _imgui_loop(lua_State *L)
         { "EndMenuBar",     _imgui_end_menu_bar },
         { "InputText",      _imgui_input_text },
         { "MenuItem",       _imgui_menu_item },
+        { "PlotLines",      _imgui_plot_lines },
         { "SameLine",       _imgui_same_line },
         { "SliderFloat",    _imgui_slider_float },
         { "Text",           _imgui_text },
