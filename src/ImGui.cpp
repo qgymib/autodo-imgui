@@ -197,6 +197,84 @@ static int _imgui_input_text(lua_State *L)
     return 1;
 }
 
+static int _imgui_begin_menu_bar(lua_State *L)
+{
+    bool ret = ImGui::BeginMenuBar();
+    lua_pushboolean(L, ret);
+    return 1;
+}
+
+static int _imgui_end_menu_bar(lua_State *L)
+{
+    (void)L;
+    ImGui::EndMenuBar();
+    return 0;
+}
+
+static int _imgui_begin_menu(lua_State *L)
+{
+    const char* str = luaL_checkstring(L, 2);
+    bool ret = ImGui::BeginMenu(str);
+    lua_pushboolean(L, ret);
+    return 1;
+}
+
+static int _imgui_end_menu(lua_State *L)
+{
+    (void)L;
+    ImGui::EndMenu();
+    return 0;
+}
+
+static int _imgui_menu_item(lua_State *L)
+{
+    const char* label = luaL_checkstring(L, 2);
+    const char* short_cut = lua_tostring(L, 3);
+
+    bool ret = ImGui::MenuItem(label, short_cut);
+    lua_pushboolean(L, ret);
+    return 1;
+}
+
+static int _imgui_text_colored(lua_State *L)
+{
+    float c1 = lua_tonumber(L, 2);
+    float c2 = lua_tonumber(L, 3);
+    float c3 = lua_tonumber(L, 4);
+    float c4 = lua_tonumber(L, 5);
+    const char* text = luaL_checkstring(L, 6);
+
+    ImGui::TextColored(ImVec4(c1, c2, c3, c4), "%s", text);
+    return 0;
+}
+
+static int _imgui_begin_child(lua_State *L)
+{
+    const char* text = lua_tostring(L, 2);
+    ImGui::BeginChild(text);
+    return 0;
+}
+
+static int _imgui_end_child(lua_State *L)
+{
+    (void)L;
+    ImGui::EndChild();
+    return 0;
+}
+
+static int _imgui_slider_float(lua_State *L)
+{
+    const char* label = lua_tostring(L, 2);
+    float f = lua_tonumber(L, 3);
+    float min = lua_tonumber(L, 4);
+    float max = lua_tonumber(L, 5);
+
+    ImGui::SliderFloat(label, &f, min, max);
+
+    lua_pushnumber(L, f);
+    return 1;
+}
+
 static int _imgui_loop(lua_State *L)
 {
     /* auto.coroutine */
@@ -221,17 +299,26 @@ static int _imgui_loop(lua_State *L)
         { NULL,         NULL },
     };
     static const luaL_Reg s_gui_method[] = {
-        { "Begin",      _imgui_begin },
-        { "End",        _imgui_end },
-        { "CheckBox",   _imgui_checkbox },
-        { "Button",     _imgui_button },
-        { "Text",       _imgui_text },
-        { "SameLine",   _imgui_same_line },
-        { "BulletText", _imgui_bullet_text },
-        { "InputText",  _imgui_input_text },
-        { NULL,         NULL },
+        { "Begin",          _imgui_begin },
+        { "BeginChild",     _imgui_begin_child },
+        { "BeginMenu",      _imgui_begin_menu },
+        { "BeginMenuBar",   _imgui_begin_menu_bar },
+        { "BulletText",     _imgui_bullet_text },
+        { "Button",         _imgui_button },
+        { "CheckBox",       _imgui_checkbox },
+        { "End",            _imgui_end },
+        { "EndChild",       _imgui_end_child },
+        { "EndMenu",        _imgui_end_menu },
+        { "EndMenuBar",     _imgui_end_menu_bar },
+        { "InputText",      _imgui_input_text },
+        { "MenuItem",       _imgui_menu_item },
+        { "SameLine",       _imgui_same_line },
+        { "SliderFloat",    _imgui_slider_float },
+        { "Text",           _imgui_text },
+        { "TextColored",    _imgui_text_colored },
+        { NULL,             NULL },
     };
-    if (luaL_newmetatable(L, "__atd_gui") != 0)
+    if (luaL_newmetatable(L, "__atd_imgui") != 0)
     {
         luaL_setfuncs(L, s_gui_meta, 0);
         luaL_newlib(L, s_gui_method);
