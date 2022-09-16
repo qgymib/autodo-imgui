@@ -212,8 +212,8 @@ static int _imgui_loop(lua_State *L)
     gui->sem = atd_api()->new_sem(0);
     gui->nfy_gui_update = atd_api()->new_async(_on_gui_update, gui);
     gui->looping = 1;
-    gui->fps = 24;
-    gui->fps_delay = (1000 / gui->fps) * 1000 * 1000;
+    gui->fps = 30;
+    gui->fps_delay = gui->fps ? (1000.0 / gui->fps) * 1000 * 1000 : 0;
     gui->window_title = strdup("ImGui");
 
     static const luaL_Reg s_gui_meta[] = {
