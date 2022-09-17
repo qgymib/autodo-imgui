@@ -20,6 +20,6 @@ typedef struct imgui_ctx
     uint64_t            fps_delay;
 } imgui_ctx_t;
 
-void ImGuiAdapter(imgui_ctx_t* ctx, void(*callback)(imgui_ctx_t* ctx));
+AUTO_LOCAL void ImGuiAdapter(imgui_ctx_t* ctx, void(*callback)(imgui_ctx_t* ctx));
 
 #endif

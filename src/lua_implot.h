@@ -7,7 +7,12 @@
 extern "C" {
 #endif
 
-int imgui_luaopen_implot(lua_State *L);
+/**
+ * @brief Open ImGui extension implot.
+ * @param[in] L     Lua VM.
+ * @return          Always 1.
+ */
+AUTO_LOCAL int imgui_luaopen_implot(lua_State *L);
 
 #ifdef __cplusplus
 }

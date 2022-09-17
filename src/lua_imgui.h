@@ -7,7 +7,17 @@
 extern "C" {
 #endif
 
-int imgui_luaopen_imgui(lua_State *L);
+/**
+ * @brief API structure.
+ */
+AUTO_LOCAL extern const auto_api_t* api;
+
+/**
+ * @brief Initialize library.
+ * @param[in] L     Lua VM.
+ * @return          always 1.
+ */
+AUTO_EXPORT int luaopen_imgui(lua_State *L);
 
 #ifdef __cplusplus
 }

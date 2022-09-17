@@ -2,37 +2,40 @@
 #include <imgui_stdlib.h>
 #include <string>
 #include "ImGuiAdapter.hpp"
+#include "lua_implot.h"
 #include "lua_imgui.h"
+
+const auto_api_t* api;
 
 static void _imgui_payload(imgui_ctx_t* gui)
 {
     if (gui->fps != 0)
     {
-        gui->now_time = atd_api()->hrtime();
+        gui->now_time = api->misc.hrtime();
         uint64_t delta = gui->now_time - gui->last_frame;
         gui->last_frame = gui->now_time;
 
         if (delta < gui->fps_delay)
         {
-            atd_api()->sleep((gui->fps_delay - delta) / 1000 / 1000);
+            api->thread.sleep((gui->fps_delay - delta) / 1000 / 1000);
         }
     }
 
-    gui->nfy_gui_update->send(gui->nfy_gui_update);
-    gui->sem->wait(gui->sem);
+    api->async.send(gui->nfy_gui_update);
+    api->sem.wait(gui->sem);
 }
 
 static void _imgui_thread(void* arg)
 {
     imgui_ctx_t* gui = (imgui_ctx_t*)arg;
 
-    gui->last_frame = atd_api()->hrtime();
+    gui->last_frame = api->misc.hrtime();
 
     gui->looping = 1;
     ImGuiAdapter(gui, _imgui_payload);
     gui->looping = 0;
 
-    gui->nfy_gui_update->send(gui->nfy_gui_update);
+    api->async.send(gui->nfy_gui_update);
 }
 
 static int _on_gui_loop_beg(lua_State* L, int status, lua_KContext ctx);
@@ -48,10 +51,10 @@ static int _on_gui_loop_end(lua_State* L, int status, lua_KContext ctx)
     imgui_ctx_t* gui = (imgui_ctx_t*)ctx;
 
     /* Notify that GUI loop is done */
-    gui->sem->post(gui->sem);
+    api->sem.post(gui->sem);
 
     /* Wait for GUI thread to wakeup */
-    gui->co->set_schedule_state(gui->co, LUA_YIELD);
+    api->coroutine.set_state(gui->co, LUA_YIELD);
     return lua_yieldk(L, 0, (lua_KContext) gui, _on_gui_loop_beg);
 }
 
@@ -95,19 +98,19 @@ static void _on_gui_update(void* arg)
     imgui_ctx_t* gui = (imgui_ctx_t*)arg;
 
     /* Wakeup gui coroutine */
-    gui->co->set_schedule_state(gui->co, LUA_TNONE);
+    api->coroutine.set_state(gui->co, LUA_TNONE);
 }
 
 static int _imgui_coroutine(lua_State *L)
 {
     imgui_ctx_t* gui = (imgui_ctx_t*)lua_touserdata(L, 1);
-    gui->co = atd_api()->find_coroutine(L);
+    gui->co = api->coroutine.find(L);
 
     /* Run gui in standalone thread */
-    gui->gui_thr = atd_api()->new_thread(_imgui_thread, gui);
+    gui->gui_thr = api->thread.create(_imgui_thread, gui);
 
     /* Wait for GUI thread to wakeup */
-    gui->co->set_schedule_state(gui->co, LUA_YIELD);
+    api->coroutine.set_state(gui->co, LUA_YIELD);
     return lua_yieldk(L, 0, (lua_KContext) gui, _on_gui_loop_beg);
 }
 
@@ -116,17 +119,17 @@ static int _imgui_gc(lua_State *L)
     imgui_ctx_t* gui = (imgui_ctx_t*)lua_touserdata(L, 1);
     if (gui->gui_thr != NULL)
     {
-        gui->gui_thr->join(gui->gui_thr);
+        api->thread.join(gui->gui_thr);
         gui->gui_thr = NULL;
     }
     if (gui->sem != NULL)
     {
-        gui->sem->destroy(gui->sem);
+        api->sem.destroy(gui->sem);
         gui->sem = NULL;
     }
     if (gui->nfy_gui_update != NULL)
     {
-        gui->nfy_gui_update->destroy(gui->nfy_gui_update);
+        api->async.destroy(gui->nfy_gui_update);
         gui->nfy_gui_update = NULL;
     }
     if (gui->window_title != NULL)
@@ -538,8 +541,8 @@ static int _imgui_loop(lua_State *L)
     /* arg2: gui */
     imgui_ctx_t* gui = (imgui_ctx_t*)lua_newuserdata(L, sizeof(imgui_ctx_t));
     memset(gui, 0, sizeof(*gui));
-    gui->sem = atd_api()->new_sem(0);
-    gui->nfy_gui_update = atd_api()->new_async(_on_gui_update, gui);
+    gui->sem = api->sem.create(0);
+    gui->nfy_gui_update = api->async.create(_on_gui_update, gui);
     gui->looping = 1;
     gui->fps = 30;
     gui->fps_delay = gui->fps ? (1000.0 / gui->fps) * 1000 * 1000 : 0;
@@ -565,7 +568,7 @@ static int _imgui_loop(lua_State *L)
     return 1;
 }
 
-int imgui_luaopen_imgui(lua_State *L)
+static int _luaopen_imgui(lua_State *L)
 {
     static const luaL_Reg s_imgui_method[] = {
         { "loop",                       _imgui_loop },
@@ -612,5 +615,18 @@ int imgui_luaopen_imgui(lua_State *L)
         { NULL,                         NULL },
     };
     luaL_newlib(L, s_imgui_method);
+    return 1;
+}
+
+int luaopen_imgui(lua_State *L)
+{
+    luaL_checkversion(L);
+    api = AUTO_GET_API();
+
+    _luaopen_imgui(L);
+
+    imgui_luaopen_implot(L);
+    lua_setfield(L, -2, "implot");
+
     return 1;
 }

@@ -55,7 +55,6 @@ endfunction()
 ###############################################################################
 
 add_library(${PROJECT_NAME} SHARED
-    src/ImGui.cpp
     src/ImGuiAdapter.cpp
     src/lua_imgui.cpp
     src/lua_implot.cpp
