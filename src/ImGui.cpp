@@ -2,6 +2,7 @@
 #include <imgui_stdlib.h>
 #include <string>
 #include "ImGuiAdapter.hpp"
+#include "lua_implot.h"
 
 static void _imgui_payload(imgui_ctx_t* gui)
 {
@@ -596,7 +597,10 @@ int luaopen_imgui(lua_State *L)
         { "loop",   _imgui_loop },
         { NULL,     NULL },
     };
-
     luaL_newlib(L, s_imgui_method);
+
+    imgui_luaopen_implot(L);
+    lua_setfield(L, -2, "implot");
+
     return 1;
 }

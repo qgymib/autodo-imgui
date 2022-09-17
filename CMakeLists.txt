@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.2)
 project(imgui)
 
 set(IMGUI_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/third_party/imgui)
+set(IMPLOT_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/third_party/implot)
 
 ###############################################################################
 # Functions
@@ -56,22 +57,25 @@ endfunction()
 add_library(${PROJECT_NAME} SHARED
     src/ImGui.cpp
     src/ImGuiAdapter.cpp
+    src/lua_implot.cpp
     ${IMGUI_ROOT}/imgui_demo.cpp
     ${IMGUI_ROOT}/imgui_draw.cpp
     ${IMGUI_ROOT}/imgui_tables.cpp
     ${IMGUI_ROOT}/imgui_widgets.cpp
     ${IMGUI_ROOT}/imgui.cpp
-    ${IMGUI_ROOT}/misc/cpp/imgui_stdlib.cpp)
+    ${IMGUI_ROOT}/misc/cpp/imgui_stdlib.cpp
+    ${IMPLOT_ROOT}/implot_items.cpp
+    ${IMPLOT_ROOT}/implot.cpp)
 
 target_include_directories(${PROJECT_NAME}
-    PUBLIC
+    PRIVATE
         $<INSTALL_INTERFACE:include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
         $<BUILD_INTERFACE:${IMGUI_ROOT}>
         $<BUILD_INTERFACE:${IMGUI_ROOT}/backends>
         $<BUILD_INTERFACE:${IMGUI_ROOT}/misc/cpp>
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src)
+        $<BUILD_INTERFACE:${IMPLOT_ROOT}>)
 
 if (WIN32)
     target_sources(imgui PRIVATE

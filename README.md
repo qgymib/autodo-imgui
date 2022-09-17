@@ -165,7 +165,7 @@ Only call EndMenu() if BeginMenu() returns true!
 gui.EndMenuBar()
 ```
 
-Oonly call EndMenuBar() if BeginMenuBar() returns true!
+Only call EndMenuBar() if BeginMenuBar() returns true!
 
 ### GetCursorPos
 
@@ -367,3 +367,79 @@ gui.Unindent(float indent_w)
 ```
 
 Move content position back to the left, by indent_w, or style.IndentSpacing if indent_w <= 0.
+
+## Extensions
+
+### implot
+
+#### BeginPlot
+
+```lua
+bool imgui.implot.BeginPlot(string title_id)
+```
+
+title_id must be unique to the current ImGui ID scope. If you need to avoid ID collisions or don't want to display a title in the plot, use double hashes (e.g. "MyPlot##HiddenIdText" or "##NoTitle").
+
+#### EndPlot
+
+```lua
+imgui.implot.EndPlot()
+```
+
+Only call EndPlot() if BeginPlot() returns true! Typically called at the end of an if statement conditioned on BeginPlot().
+
+#### PlotBars
+
+```lua
+imgui.implot.PlotBars(string label_id, table)
+```
+
+Plots a bar graph. Vertical by default. #bar_size and #shift are in plot units.
+
+#### PlotHeatmap
+
+```lua
+imgui.implot.PlotHeatmap(string label_id, table, rows, cols)
+```
+
+Plots a 2D heatmap chart. Values are expected to be in row-major order by default. Leave #scale_min and scale_max both at 0 for automatic color scaling, or set them to a predefined range. #label_fmt can be set to NULL for no labels.
+
+#### PlotLine
+
+```lua
+imgui.implot.PlotLine(string label_id, table)
+```
+
+Plots a standard 2D line plot.
+
+#### PlotScatter
+
+```lua
+imgui.implot.PlotLine(string label_id, table)
+```
+
+Plots a standard 2D scatter plot. Default marker is ImPlotMarker_Circle.
+
+#### PlotShaded
+
+```lua
+imgui.implot.PlotShaded(string label_id, table)
+```
+
+Plots a shaded (filled) region between two lines, or a line and a horizontal reference. Set yref to +/-INFINITY for infinite fill extents.
+
+#### PlotStairs
+
+```lua
+imgui.implot.PlotStairs(string label_id, table)
+```
+
+Plots a a stairstep graph. The y value is continued constantly to the right from every x position, i.e. the interval [x[i], x[i+1]) has the value y[i].
+
+#### PlotStems
+
+```lua
+imgui.implot.PlotStems(string label_id, table)
+```
+
+Plots stems. Vertical by default.

@@ -1,4 +1,5 @@
 #include "ImGuiAdapter.hpp"
+#include <implot.h>
 
 #if defined(IMGUI_BACKEND_OPENGL3)
 #   include <imgui_impl_opengl3.h>
@@ -64,6 +65,7 @@ void ImGuiAdapter(imgui_ctx_t* gui, void(*callback)(imgui_ctx_t* ctx))
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
+    ImPlot::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.IniFilename = NULL;
 #if 0
@@ -139,6 +141,7 @@ void ImGuiAdapter(imgui_ctx_t* gui, void(*callback)(imgui_ctx_t* ctx))
 #elif defined(IMGUI_BACKEND_SDL)
     ImGui_ImplSDL2_Shutdown();
 #endif
+    ImPlot::DestroyContext();
     ImGui::DestroyContext();
 
 #if defined(IMGUI_BACKEND_GLFW)
