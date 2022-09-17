@@ -5,40 +5,40 @@ local is_closed = false
 local need_show = true
 local show_demo = true
 
-local function on_gui(gui)
+local function on_gui()
     if not need_show then
         return
     end
 
-    is_open, need_show = gui.Begin("Test window", need_show)
+    is_open, need_show = imgui.Begin("Test window", need_show)
 
     if not is_open then
-        gui.End()
+        imgui.End()
         return
     end
 
-    is_checked = gui.CheckBox("test box", is_checked)
-    if gui.Button("test button") then
+    is_checked = imgui.CheckBox("test box", is_checked)
+    if imgui.Button("test button") then
         io.write("button clicked\n")
     end
-    gui.Text("text")
-    gui.TextColored(1, 1, 0, 1, "sf")
-    gui.BulletText("text2")
-    local str = gui.InputText("测试")
+    imgui.Text("text")
+    imgui.TextColored(1, 1, 0, 1, "sf")
+    imgui.BulletText("text2")
+    local str = imgui.InputText("测试")
     if str ~= nil then
         io.write(str .. "\n")
     end
 
-    gui.PlotLines("fps", 1, 5, 12, 9, 2, 4, 0)
+    imgui.PlotLines("fps", 1, 5, 12, 9, 2, 4, 0)
 
     if show_demo then
-        show_demo = gui.ShowDemoWindow()
+        show_demo = imgui.ShowDemoWindow()
     end
 
-    gui.ShowMetricsWindow()
-    gui.ShowStackToolWindow()
+    imgui.ShowMetricsWindow()
+    imgui.ShowStackToolWindow()
 
-    gui.End()
+    imgui.End()
 end
 
-imgui.loop(on_gui)
+imgui.loop(on_gui, 2)
