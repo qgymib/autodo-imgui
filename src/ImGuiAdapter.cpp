@@ -47,7 +47,7 @@ void ImGuiAdapter(imgui_ctx_t* gui, void(*callback)(imgui_ctx_t* ctx))
 
     // Create window with graphics context
 #if defined(IMGUI_BACKEND_GLFW)
-    GLFWwindow* window = glfwCreateWindow(1280, 720, gui->window_title, NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(gui->window.x, gui->window.y, gui->window.title, NULL, NULL);
     assert(window != NULL);
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // Enable vsync
@@ -56,7 +56,8 @@ void ImGuiAdapter(imgui_ctx_t* gui, void(*callback)(imgui_ctx_t* ctx))
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
     SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-    SDL_Window* window = SDL_CreateWindow(gui->window_title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
+    SDL_Window* window = SDL_CreateWindow(gui->window.title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+        gui->window.x, gui->window.y, window_flags);
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);
     SDL_GL_SetSwapInterval(1); // Enable vsync

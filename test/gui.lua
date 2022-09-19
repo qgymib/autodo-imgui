@@ -2,22 +2,30 @@ local imgui = require("imgui")
 
 local is_checked = false
 local is_closed = false
-local need_show = true
-local show_demo = true
 
-local function on_gui()
-    if not need_show then
-        return
+local is_metrics_show = true
+local function show_metrics_window()
+    if is_metrics_show then
+        is_metrics_show = imgui.ShowMetricsWindow()
     end
+end
 
-    is_open, need_show = imgui.Begin("Test window", need_show)
+local is_demo_show = true
+local function show_demo()
+    if is_demo_show then
+        is_demo_show = imgui.ShowDemoWindow()
+    end
+end
 
-    if not is_open then
+local is_test_show = true
+local function show_test_window()
+    is_open, is_test_show = imgui.Begin("Test window", is_test_show)
+        if not is_open then
         imgui.End()
         return
     end
 
-    is_checked = imgui.CheckBox("test box", is_checked)
+        is_checked = imgui.CheckBox("test box", is_checked)
     if imgui.Button("test button") then
         io.write("button clicked\n")
     end
@@ -31,14 +39,13 @@ local function on_gui()
 
     imgui.PlotLines("fps", 1, 5, 12, 9, 2, 4, 0)
 
-    if show_demo then
-        show_demo = imgui.ShowDemoWindow()
-    end
-
-    imgui.ShowMetricsWindow()
-    imgui.ShowStackToolWindow()
-
     imgui.End()
 end
 
-imgui.loop(on_gui, 2)
+local function on_gui()
+    show_demo()
+    show_metrics_window()
+    show_test_window()
+end
+
+imgui.loop({}, on_gui, 2)

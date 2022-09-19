@@ -132,10 +132,10 @@ static int _imgui_gc(lua_State *L)
         api->async.destroy(gui->nfy_gui_update);
         gui->nfy_gui_update = NULL;
     }
-    if (gui->window_title != NULL)
+    if (gui->window.title != NULL)
     {
-        free(gui->window_title);
-        gui->window_title = NULL;
+        free(gui->window.title);
+        gui->window.title = NULL;
     }
     return 0;
 }
@@ -527,6 +527,39 @@ static int _imgui_get_frame_height(lua_State *L)
     return 1;
 }
 
+static int _imgui_options(lua_State* L, int idx, imgui_ctx_t* gui)
+{
+    if (lua_getfield(L, idx, "window_size") == LUA_TSTRING)
+    {
+        sscanf(lua_tostring(L, -1), "%dx%d", &gui->window.x, &gui->window.y);
+    }
+    lua_pop(L, 1);
+
+    if (lua_getfield(L, idx, "window_title") == LUA_TSTRING)
+    {
+        if (gui->window.title != NULL)
+        {
+            free(gui->window.title);
+        }
+        gui->window.title = strdup(lua_tostring(L, -1));
+    }
+    lua_pop(L, 1);
+
+    return 0;
+}
+
+static void _imgui_initialize_to_default(imgui_ctx_t* gui)
+{
+    gui->sem = api->sem.create(0);
+    gui->nfy_gui_update = api->async.create(_on_gui_update, gui);
+    gui->looping = 1;
+    gui->fps = 30;
+    gui->fps_delay = gui->fps ? (1000.0 / gui->fps) * 1000 * 1000 : 0;
+    gui->window.title = strdup("ImGui");
+    gui->window.x = 1280;
+    gui->window.y = 720;
+}
+
 static int _imgui_loop(lua_State *L)
 {
     int sp = lua_gettop(L);
@@ -541,12 +574,8 @@ static int _imgui_loop(lua_State *L)
     /* arg2: gui */
     imgui_ctx_t* gui = (imgui_ctx_t*)lua_newuserdata(L, sizeof(imgui_ctx_t));
     memset(gui, 0, sizeof(*gui));
-    gui->sem = api->sem.create(0);
-    gui->nfy_gui_update = api->async.create(_on_gui_update, gui);
-    gui->looping = 1;
-    gui->fps = 30;
-    gui->fps_delay = gui->fps ? (1000.0 / gui->fps) * 1000 * 1000 : 0;
-    gui->window_title = strdup("ImGui");
+    _imgui_initialize_to_default(gui);
+    _imgui_options(L, 1, gui);
 
     static const luaL_Reg s_gui_meta[] = {
         { "__gc",       _imgui_gc },
@@ -559,12 +588,12 @@ static int _imgui_loop(lua_State *L)
     lua_setmetatable(L, -2);
 
     /* arg3+: user function and arguments */
-    for (int i = 1; i <= sp; i++)
+    for (int i = 2; i <= sp; i++)
     {
         lua_pushvalue(L, i);
     }
 
-    lua_call(L, sp + 2, 1);
+    lua_call(L, sp + 1, 1);
     return 1;
 }
 
