@@ -19,13 +19,13 @@ end
 
 local is_test_show = true
 local function show_test_window()
-    is_open, is_test_show = imgui.Begin("Test window", is_test_show)
-        if not is_open then
-        imgui.End()
+    if not is_test_show then
         return
     end
 
-        is_checked = imgui.CheckBox("test box", is_checked)
+    _, is_test_show = imgui.Begin("Test window", true)
+
+    is_checked = imgui.CheckBox("test box", is_checked)
     if imgui.Button("test button") then
         io.write("button clicked\n")
     end
@@ -48,4 +48,5 @@ local function on_gui()
     show_test_window()
 end
 
-imgui.loop({}, on_gui, 2)
+local gui_token = imgui.loop({}, on_gui)
+gui_token:await()

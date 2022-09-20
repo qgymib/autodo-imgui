@@ -5,7 +5,16 @@
 #include "lua_implot.h"
 #include "lua_imgui.h"
 
+#define LUA_IMGUI_SET_FLAG(x)   \
+    _imgui_add_constant(L, -2, #x, x)
+
 const auto_api_t* api;
+
+static void _imgui_add_constant(lua_State* L, int idx, const char* field, int64_t value)
+{
+    api->int64.push_value(L, value);
+    lua_setfield(L, idx, field);
+}
 
 static void _imgui_payload(imgui_ctx_t* gui)
 {
@@ -142,21 +151,27 @@ static int _imgui_gc(lua_State *L)
 
 static int _imgui_begin(lua_State *L)
 {
-    bool ret;
+    /* arg1 */
     const char* str = luaL_checkstring(L, 1);
 
+    /* arg2 */
+    bool need_close_icon = true;
+    bool is_open = true;
     if (lua_isboolean(L, 2))
     {
-        bool open = lua_toboolean(L, 2);
-        ret = ImGui::Begin(str, &open);
-        lua_pushboolean(L, ret);
-        lua_pushboolean(L, open);
-        return 2;
+        need_close_icon = lua_toboolean(L, 2);
     }
+    bool* p_open = need_close_icon ? &is_open : NULL;
 
-    ret = ImGui::Begin(str);
+    /* arg3 */
+    int64_t l_flag;
+    ImGuiWindowFlags flag = api->int64.get_value(L, 3, &l_flag) ? (ImGuiWindowFlags)l_flag : ImGuiWindowFlags_None;
+
+    /* call */
+    bool ret = ImGui::Begin(str, p_open, flag);
     lua_pushboolean(L, ret);
-    return 1;
+    lua_pushboolean(L, is_open);
+    return 2;
 }
 
 static int _imgui_end(lua_State *L)
@@ -644,8 +659,35 @@ static int _luaopen_imgui(lua_State *L)
         { NULL,                         NULL },
     };
     luaL_newlib(L, s_imgui_method);
+
+    LUA_IMGUI_SET_FLAG(ImGuiWindowFlags_None);
+    LUA_IMGUI_SET_FLAG(ImGuiWindowFlags_NoTitleBar);
+    LUA_IMGUI_SET_FLAG(ImGuiWindowFlags_NoResize);
+    LUA_IMGUI_SET_FLAG(ImGuiWindowFlags_NoMove);
+    LUA_IMGUI_SET_FLAG(ImGuiWindowFlags_NoScrollbar);
+    LUA_IMGUI_SET_FLAG(ImGuiWindowFlags_NoScrollWithMouse);
+    LUA_IMGUI_SET_FLAG(ImGuiWindowFlags_NoCollapse);
+    LUA_IMGUI_SET_FLAG(ImGuiWindowFlags_AlwaysAutoResize);
+    LUA_IMGUI_SET_FLAG(ImGuiWindowFlags_NoBackground);
+    LUA_IMGUI_SET_FLAG(ImGuiWindowFlags_NoSavedSettings);
+    LUA_IMGUI_SET_FLAG(ImGuiWindowFlags_NoMouseInputs);
+    LUA_IMGUI_SET_FLAG(ImGuiWindowFlags_MenuBar);
+    LUA_IMGUI_SET_FLAG(ImGuiWindowFlags_HorizontalScrollbar);
+    LUA_IMGUI_SET_FLAG(ImGuiWindowFlags_NoFocusOnAppearing);
+    LUA_IMGUI_SET_FLAG(ImGuiWindowFlags_NoBringToFrontOnFocus);
+    LUA_IMGUI_SET_FLAG(ImGuiWindowFlags_AlwaysVerticalScrollbar);
+    LUA_IMGUI_SET_FLAG(ImGuiWindowFlags_AlwaysHorizontalScrollbar);
+    LUA_IMGUI_SET_FLAG(ImGuiWindowFlags_AlwaysUseWindowPadding);
+    LUA_IMGUI_SET_FLAG(ImGuiWindowFlags_NoNavInputs);
+    LUA_IMGUI_SET_FLAG(ImGuiWindowFlags_NoNavFocus);
+    LUA_IMGUI_SET_FLAG(ImGuiWindowFlags_UnsavedDocument);
+    LUA_IMGUI_SET_FLAG(ImGuiWindowFlags_NoNav);
+    LUA_IMGUI_SET_FLAG(ImGuiWindowFlags_NoDecoration);
+    LUA_IMGUI_SET_FLAG(ImGuiWindowFlags_NoInputs);
+
     return 1;
 }
+
 
 int luaopen_imgui(lua_State *L)
 {

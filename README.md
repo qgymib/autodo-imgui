@@ -43,8 +43,9 @@ Vertically align upcoming text baseline to FramePadding.y so that it will align 
 ### Begin
 
 ```
-bool gui.Begin(string name)
+bool,bool gui.Begin(string name)
 bool,bool gui.Begin(string name, bool show_close)
+bool,bool gui.Begin(string name, bool show_close, flags)
 ```
 
 Push window to the stack and start appending to it.
