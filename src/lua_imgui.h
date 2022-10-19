@@ -7,9 +7,6 @@
 extern "C" {
 #endif
 
-/**
- * @brief API structure.
- */
 AUTO_LOCAL extern const auto_api_t* api;
 
 /**

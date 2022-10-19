@@ -12,7 +12,7 @@ const auto_api_t* api;
 
 static void _imgui_add_constant(lua_State* L, int idx, const char* field, int64_t value)
 {
-    api->int64.push_value(L, value);
+    lua_pushinteger(L, value);
     lua_setfield(L, idx, field);
 }
 
@@ -20,31 +20,30 @@ static void _imgui_payload(imgui_ctx_t* gui)
 {
     if (gui->fps != 0)
     {
-        gui->now_time = api->misc.hrtime();
+        gui->now_time = api->misc->hrtime();
         uint64_t delta = gui->now_time - gui->last_frame;
         gui->last_frame = gui->now_time;
 
         if (delta < gui->fps_delay)
         {
-            api->thread.sleep((gui->fps_delay - delta) / 1000 / 1000);
+            api->thread->sleep((gui->fps_delay - delta) / 1000 / 1000);
         }
     }
 
-    api->async.send(gui->nfy_gui_update);
-    api->sem.wait(gui->sem);
+    api->notify->send(gui->nfy_gui_update);
+    api->sem->wait(gui->sem);
 }
 
 static void _imgui_thread(void* arg)
 {
     imgui_ctx_t* gui = (imgui_ctx_t*)arg;
 
-    gui->last_frame = api->misc.hrtime();
+    gui->last_frame = api->misc->hrtime();
 
-    gui->looping = 1;
     ImGuiAdapter(gui, _imgui_payload);
     gui->looping = 0;
 
-    api->async.send(gui->nfy_gui_update);
+    api->notify->send(gui->nfy_gui_update);
 }
 
 static int _on_gui_loop_beg(lua_State* L, int status, lua_KContext ctx);
@@ -60,10 +59,10 @@ static int _on_gui_loop_end(lua_State* L, int status, lua_KContext ctx)
     imgui_ctx_t* gui = (imgui_ctx_t*)ctx;
 
     /* Notify that GUI loop is done */
-    api->sem.post(gui->sem);
+    api->sem->post(gui->sem);
 
     /* Wait for GUI thread to wakeup */
-    api->coroutine.set_state(gui->co, LUA_YIELD);
+    api->coroutine->set_state(gui->co, LUA_YIELD);
     return lua_yieldk(L, 0, (lua_KContext) gui, _on_gui_loop_beg);
 }
 
@@ -107,38 +106,43 @@ static void _on_gui_update(void* arg)
     imgui_ctx_t* gui = (imgui_ctx_t*)arg;
 
     /* Wakeup gui coroutine */
-    api->coroutine.set_state(gui->co, LUA_TNONE);
+    api->coroutine->set_state(gui->co, LUA_TNONE);
 }
 
 static int _imgui_coroutine(lua_State *L)
 {
     imgui_ctx_t* gui = (imgui_ctx_t*)lua_touserdata(L, 1);
-    gui->co = api->coroutine.find(L);
+    gui->co = api->coroutine->find(L);
 
     /* Run gui in standalone thread */
-    gui->gui_thr = api->thread.create(_imgui_thread, gui);
+    gui->gui_thr = api->thread->create(_imgui_thread, gui);
 
     /* Wait for GUI thread to wakeup */
-    api->coroutine.set_state(gui->co, LUA_YIELD);
+    api->coroutine->set_state(gui->co, LUA_YIELD);
     return lua_yieldk(L, 0, (lua_KContext) gui, _on_gui_loop_beg);
 }
 
 static int _imgui_gc(lua_State *L)
 {
     imgui_ctx_t* gui = (imgui_ctx_t*)lua_touserdata(L, 1);
+
+    /* Stop gui thread */
+    gui->looping = 0;
+    api->sem->post(gui->sem);
+
     if (gui->gui_thr != NULL)
     {
-        api->thread.join(gui->gui_thr);
+        api->thread->join(gui->gui_thr);
         gui->gui_thr = NULL;
     }
     if (gui->sem != NULL)
     {
-        api->sem.destroy(gui->sem);
+        api->sem->destroy(gui->sem);
         gui->sem = NULL;
     }
     if (gui->nfy_gui_update != NULL)
     {
-        api->async.destroy(gui->nfy_gui_update);
+        api->notify->destroy(gui->nfy_gui_update);
         gui->nfy_gui_update = NULL;
     }
     if (gui->window.title != NULL)
@@ -164,8 +168,7 @@ static int _imgui_begin(lua_State *L)
     bool* p_open = need_close_icon ? &is_open : NULL;
 
     /* arg3 */
-    int64_t l_flag;
-    ImGuiWindowFlags flag = api->int64.get_value(L, 3, &l_flag) ? (ImGuiWindowFlags)l_flag : ImGuiWindowFlags_None;
+    ImGuiWindowFlags flag = lua_tointeger(L, 3);
 
     /* call */
     bool ret = ImGui::Begin(str, p_open, flag);
@@ -563,10 +566,10 @@ static int _imgui_options(lua_State* L, int idx, imgui_ctx_t* gui)
     return 0;
 }
 
-static void _imgui_initialize_to_default(imgui_ctx_t* gui)
+static void _imgui_initialize_to_default(lua_State* L, imgui_ctx_t* gui)
 {
-    gui->sem = api->sem.create(0);
-    gui->nfy_gui_update = api->async.create(_on_gui_update, gui);
+    gui->sem = api->sem->create(0);
+    gui->nfy_gui_update = api->notify->create(L, _on_gui_update, gui);
     gui->looping = 1;
     gui->fps = 30;
     gui->fps_delay = gui->fps ? (1000.0 / gui->fps) * 1000 * 1000 : 0;
@@ -575,7 +578,7 @@ static void _imgui_initialize_to_default(imgui_ctx_t* gui)
     gui->window.y = 720;
 }
 
-static int _imgui_loop(lua_State *L)
+static int _imgui_loop(lua_State* L)
 {
     int sp = lua_gettop(L);
 
@@ -589,7 +592,7 @@ static int _imgui_loop(lua_State *L)
     /* arg2: gui */
     imgui_ctx_t* gui = (imgui_ctx_t*)lua_newuserdata(L, sizeof(imgui_ctx_t));
     memset(gui, 0, sizeof(*gui));
-    _imgui_initialize_to_default(gui);
+    _imgui_initialize_to_default(L, gui);
     _imgui_options(L, 1, gui);
 
     static const luaL_Reg s_gui_meta[] = {
@@ -688,11 +691,22 @@ static int _luaopen_imgui(lua_State *L)
     return 1;
 }
 
+static void* _get_api(lua_State *L, const char* name)
+{
+    void* ret;
+    lua_getglobal(L, "auto");
+    lua_getfield(L, -1, name);
+    ret = lua_touserdata(L, -1);
+    lua_pop(L, 2);
+    return ret;
+}
 
 int luaopen_imgui(lua_State *L)
 {
     luaL_checkversion(L);
-    api = AUTO_GET_API();
+
+    /* Get API */
+    api = (auto_api_t*)_get_api(L, "c_api");
 
     _luaopen_imgui(L);
 

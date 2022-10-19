@@ -7,9 +7,9 @@ typedef struct imgui_ctx
 {
     atd_coroutine_t*    co;
 
-    atd_thread_t*       gui_thr;
-    atd_sem_t*          sem;
-    atd_sync_t*         nfy_gui_update;
+    auto_thread_t*      gui_thr;
+    auto_sem_t*         sem;
+    auto_notify_t*      nfy_gui_update;
 
     uint64_t            now_time;
     uint64_t            last_frame;

@@ -89,7 +89,7 @@ void ImGuiAdapter(imgui_ctx_t* gui, void(*callback)(imgui_ctx_t* ctx))
     while (!glfwWindowShouldClose(window))
 #elif defined(IMGUI_BACKEND_SDL)
     bool done = false;
-    while (!done)
+    while (!done && gui->looping)
 #endif
     {
 #if defined(IMGUI_BACKEND_GLFW)
