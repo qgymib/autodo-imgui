@@ -5,7 +5,7 @@
 
 typedef struct imgui_ctx
 {
-    atd_coroutine_t*    co;
+    auto_coroutine_t*   co;
 
     auto_thread_t*      gui_thr;
     auto_sem_t*         sem;
